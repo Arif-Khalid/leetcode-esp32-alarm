@@ -10,7 +10,7 @@ This project is a little alarm for that checks if you did your daily leetcode fo
 # Setup
 1. Hardware Setup (Change respective pin number in constants.h as required for your own pin numbers)
   * My LED is connected to pin 23(GPIO) with a resistor to ground
-  * My Buzzer is connected to pin 21(GPIO PWM Enabled) with a resistor to ground
+  * My Buzzer is connected to pin 22(GPIO PWM Enabled) with a resistor to ground
 2. Software Setup
   * Clone the project into a folder */alarm (necessary for arduino ide)
   * Create credentials.h and copy in the example in credentials_example.h, filling in your credentials
@@ -34,6 +34,10 @@ When detected as daily completed, will stop retrying until 8.00am the following 
   * Alarm: Yes
   * RetryFrequency: 15 minutes (Should still not hit rate limit of leetcode alfa-api calls)
   * This is very annoying and will force me to wake up and do it
- 
 
 *RetryFrequency refers to the frequency that the leetcode alfa-api is called to check daily completion status, also the frequency the alarm is sounded when status is incompleted*
+# Things to node
+* The method of checking if your leetcode daily is completed is by checking your last accepted submission title is the same as the leetcode daily problem title
+* Therefore if you complete the daily and then proceed to submit an accepted solution to another problem before the retry frequency, it will detect as uncompleted
+* To fix this issue, just submit the daily again so your last AC is the daily once more
+
