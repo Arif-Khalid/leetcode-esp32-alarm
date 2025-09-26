@@ -8,6 +8,7 @@
 unsigned long previousMillis = 0; // stores last toggle time
 bool isLedOn = false;
 int ledState = 0;
+int errorCode = 0;
 bool isPendingRetry = false;
 
 const size_t JSON_CAP = JSON_OBJECT_SIZE(3) + 1024;
@@ -22,6 +23,10 @@ String getLatestAcceptedName(){
 
     if (httpCode > 0) {
       Serial.printf("HTTP Response code: %d\n", httpCode);
+      if(httpCode == 429){
+        errorCode = 1;
+        return "";
+      }
       String payload = http.getString();
 
 
@@ -38,11 +43,13 @@ String getLatestAcceptedName(){
       Serial.print("Last AC Title: ");
       Serial.println(title);
     } else {
+      errorCode = 2;
       Serial.printf("GET failed, error: %s\n", http.errorToString(httpCode).c_str());
     }
 
     http.end();
   } else {
+    errorCode = 3;
     Serial.println("WiFi not connected");
   }
   return title;
@@ -59,6 +66,10 @@ String getDailyName(){
 
     if (httpCode > 0) {
       Serial.printf("HTTP Response code: %d\n", httpCode);
+      if(httpCode == 429){
+        errorCode = 1;
+        return "";
+      }
       String payload = http.getString();
 
 
@@ -75,11 +86,13 @@ String getDailyName(){
       Serial.print("Title: ");
       Serial.println(title);
     } else {
+      errorCode = 2;
       Serial.printf("GET failed, error: %s\n", http.errorToString(httpCode).c_str());
     }
 
     http.end();
   } else {
+    errorCode = 3;
     Serial.println("WiFi not connected");
   }
   return title;
@@ -121,6 +134,7 @@ void setup() {
 
   // Setup PWM on the speaker pin
   ledcAttachChannel(SPEAKER_PIN, 2000, 8, PWM_CHANNEL);
+  testing();
 }
 
 void loadingLed(){
@@ -144,17 +158,20 @@ void failureLedSound(){
 }
 
 void retryLed(){
-  unsigned long currentMillis = millis();
-  if(previousMillis > currentMillis){
-    // Rollover occured
-    previousMillis = 0;
-  }
+  digitalWrite(LED_BUILTIN, LOW);
+  if(errorCode > 0){
+    unsigned long currentMillis = millis();
+    if(previousMillis > currentMillis){
+      // Rollover occured
+      previousMillis = 0;
+    }
 
-  // check if interval has passed
-  if (currentMillis - previousMillis >= INTERVAL) {
-    previousMillis = currentMillis;   // save last toggle time
-    isLedOn = !isLedOn;               // flip state
-    digitalWrite(LED_BUILTIN, isLedOn);    // apply to LED
+    // check if interval has passed
+    if (currentMillis - previousMillis >= INTERVAL) {
+      previousMillis = currentMillis;   // save last toggle time
+      isLedOn = !isLedOn;               // flip state
+      digitalWrite(LED_BUILTIN, isLedOn);    // apply to LED
+    }
   }
 }
 
