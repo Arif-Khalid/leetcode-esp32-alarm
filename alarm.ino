@@ -3,6 +3,12 @@
 #include <HTTPClient.h>
 #include "credentials.h"
 #include "constants.h"
+/*  Error code meanings:
+    0: No error
+    1: Too many requests (rate limit of server hit)
+    2: HTTP query failed (likely timeout, server didn't respond, possibly offline)
+    3: WiFi not connected (WiFi network down/disconnected)
+*/
 int errorCode = 0;
 bool isPendingRetry = false;
 
@@ -11,7 +17,7 @@ String getLatestAcceptedName(){
   String title = "";
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    http.setTimeout(NETWORK_REQUEST_TIMEOUT_MS);  // 10 seconds
+    http.setTimeout(NETWORK_REQUEST_TIMEOUT_MS);
 
     http.begin(BASE_URL + LAST_AC_ROUTE);
     int httpCode = http.GET();
@@ -54,7 +60,7 @@ String getDailyName(){
   String title = "";
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    http.setTimeout(10000);  // 10 seconds
+    http.setTimeout(NETWORK_REQUEST_TIMEOUT_MS);
 
     http.begin(BASE_URL + DAILY_ROUTE);
     int httpCode = http.GET();
