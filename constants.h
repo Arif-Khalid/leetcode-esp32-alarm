@@ -4,7 +4,7 @@
 const String BASE_URL = unique_base_url;  // Can be set to https://alfa-leetcode-api.onrender.com/ to use the public API. Problem is it has quite a strict rate limit,
 const String DAILY_ROUTE = "daily";
 const String LAST_AC_ROUTE = String(username) + "/acSubmission?limit=1";
-const int NETWORK_REQUEST_TIMEOUT_MS = 30000;
+const int NETWORK_REQUEST_TIMEOUT_MS = 60000;
 
 // LED Vars
 const long INTERVAL = 100; // interval in ms (500 ms = 0.5s)
