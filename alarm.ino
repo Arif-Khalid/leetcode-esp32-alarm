@@ -3,11 +3,6 @@
 #include <HTTPClient.h>
 #include "credentials.h"
 #include "constants.h"
-
-
-unsigned long previousMillis = 0; // stores last toggle time
-bool isLedOn = false;
-int ledState = 0;
 int errorCode = 0;
 bool isPendingRetry = false;
 
@@ -16,7 +11,7 @@ String getLatestAcceptedName(){
   String title = "";
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    http.setTimeout(10000);  // 10 seconds
+    http.setTimeout(NETWORK_REQUEST_TIMEOUT_MS);  // 10 seconds
 
     http.begin(BASE_URL + LAST_AC_ROUTE);
     int httpCode = http.GET();
@@ -98,19 +93,17 @@ String getDailyName(){
   return title;
 }
 
-void completedDailyCheck(){
-  ledState = 0;
+bool hasCompletedDaily(){
+  errorCode = 0;
   String dailyName = getDailyName();
   if(dailyName.length() == 0){
-    return;
+    return false;
   }
   String latestAcceptedName = getLatestAcceptedName();
   if(latestAcceptedName.length() == 0){
-    return;
+    return false;
   }
-  if(dailyName == latestAcceptedName){
-    ledState = 1;
-  }
+  return dailyName == latestAcceptedName;
 }
 
 void setup() {
@@ -124,76 +117,34 @@ void setup() {
     Serial.print(".");
   }
 
+  feedbackSetup();
   Serial.println("\nWiFi connected.");
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
-
-  pinMode(LED_PIN, OUTPUT);
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
-
-  // Setup PWM on the speaker pin
-  ledcAttachChannel(SPEAKER_PIN, 2000, 8, PWM_CHANNEL);
-  testing();
 }
 
-void loadingLed(){
-  digitalWrite(LED_BUILTIN, HIGH);
-  digitalWrite(LED_PIN, LOW);
-}
 
-void successLed(){
-  digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(LED_PIN, HIGH);
-}
-
-void failureLedSound(){
-  digitalWrite(LED_PIN, LOW);
-  for (int i = 0; i < 2; i++){
-    ledcWrite(SPEAKER_PIN, ERROR_FREQ);
-    delay(BEEP_DURATION_MS);
-    ledcWrite(SPEAKER_PIN, 0);
-    delay(PAUSE_DURATION_MS);
-  }
-}
-
-void retryLed(){
-  digitalWrite(LED_BUILTIN, LOW);
-  if(errorCode > 0){
-    unsigned long currentMillis = millis();
-    if(previousMillis > currentMillis){
-      // Rollover occured
-      previousMillis = 0;
-    }
-
-    // check if interval has passed
-    if (currentMillis - previousMillis >= INTERVAL) {
-      previousMillis = currentMillis;   // save last toggle time
-      isLedOn = !isLedOn;               // flip state
-      digitalWrite(LED_BUILTIN, isLedOn);    // apply to LED
-    }
-  }
-}
 
 unsigned long retryStart = 0;
 void loop() {
   if(isPendingRetry){
-    retryLed();
+    // Non blocking wait for TIME_BETWEEN_RETRY MS
     unsigned long currentMillis = millis();
     if(retryStart > currentMillis){
       retryStart = 0;
     }
-    if(currentMillis - retryStart > TIME_BETWEEN_RETRY_MS){
+    int currentPast = currentMillis - retryStart;
+    retryLed(currentPast * 1.0 / TIME_BETWEEN_RETRY_MS);
+    if(currentPast > TIME_BETWEEN_RETRY_MS){
       isPendingRetry = false;
     }
     delay(100);
   }else{
     loadingLed();
-    completedDailyCheck();
-    if(ledState == 0){
-      failureLedSound();
-    }else if(ledState == 1){
+    if(hasCompletedDaily()){
       successLed();
+    }else{
+      failureLedSound();
     }
     Serial.println("Now waiting 30 minutes till next loop, reset to try again earlier");
     retryStart = millis();
