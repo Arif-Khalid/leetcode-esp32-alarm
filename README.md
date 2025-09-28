@@ -32,7 +32,7 @@ When detected as daily completed, will stop retrying until 8.00am the following 
   * Don't want an alarm if I am trying to rest for a bit and might annoy others unnecessarily while there is still time
 * 11.00pm: Estimated time to be on bed about to sleep
   * Alarm: Yes
-  * RetryFrequency: 15 minutes (Should still not hit rate limit of leetcode alfa-api calls)
+  * RetryFrequency: 30 minutes
   * This is very annoying and will force me to wake up and do it
 
 *RetryFrequency refers to the frequency that the leetcode alfa-api is called to check daily completion status, also the frequency the alarm is sounded when status is incompleted*
