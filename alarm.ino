@@ -8,9 +8,12 @@
     1: Too many requests (rate limit of server hit)
     2: HTTP query failed (likely timeout, server didn't respond, possibly offline)
     3: WiFi not connected (WiFi network down/disconnected)
+    4: Time not retrieved (NTP error)
 */
 int errorCode = 0;
 bool isPendingRetry = false;
+bool hasSucceeded = false;
+Config config = configs[0];
 
 const size_t JSON_CAP = JSON_OBJECT_SIZE(3) + 1024;
 String getLatestAcceptedName(){
@@ -124,6 +127,7 @@ void setup() {
   }
 
   feedbackSetup();
+  timeSetup();
   Serial.println("\nWiFi connected.");
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
@@ -133,6 +137,19 @@ void setup() {
 
 unsigned long retryStart = 0;
 void loop() {
+  if(hasSucceeded){
+    if(hasReset()){
+      isPendingRetry = false;
+      hasSucceeded = false;
+      errorCode = 0;
+    }else{
+      displayErrorCode(errorCode);
+      delay(TIME_BETWEEN_TIME_CHECK_MS);
+    }
+    return;
+  }
+
+  config = getConfig();
   if(isPendingRetry){
     // Non blocking wait for TIME_BETWEEN_RETRY MS
     unsigned long currentMillis = millis();
@@ -140,8 +157,8 @@ void loop() {
       retryStart = 0;
     }
     int currentPast = currentMillis - retryStart;
-    retryLed(currentPast * 1.0 / TIME_BETWEEN_RETRY_MS);
-    if(currentPast > TIME_BETWEEN_RETRY_MS){
+    retryLed(currentPast * 1.0 / config.timeBetweenRetryMs);
+    if(currentPast > config.timeBetweenRetryMs){
       isPendingRetry = false;
     }
     delay(100);
@@ -149,11 +166,13 @@ void loop() {
     loadingLed();
     if(hasCompletedDaily()){
       successLed();
+      hasSucceeded = true;
+      Serial.println("Congratulations! Now I will continue checking after 8.30a.m.");
     }else{
       failureLedSound();
+      Serial.println("Now waiting 30 minutes till next loop, reset to try again earlier");
+      retryStart = millis();
+      isPendingRetry = true;
     }
-    Serial.println("Now waiting 30 minutes till next loop, reset to try again earlier");
-    retryStart = millis();
-    isPendingRetry = true;
   }
 }

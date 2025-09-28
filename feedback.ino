@@ -28,15 +28,52 @@ void loadingLed(){
 void successLed(){
   digitalWrite(LED_BUILTIN, LOW);
   digitalWrite(LED_PIN, HIGH);
+  // No success sound for now because of no resistor available to speaker
+  // for (int i = 0; i < SUCCESS_MELODY_COUNT; i++) {
+  //   ledcWrite(SPEAKER_PIN, SUCCESS_MELODY[i]);
+  //   delay(SUCCESS_TONE_DURATIONS[i]);
+  //   ledcWrite(SPEAKER_PIN, 0);  // Stop tone
+  //   delay(SUCCESS_PAUSE_DURATION);
+  // }
 }
 
 void failureLedSound(){
   digitalWrite(LED_PIN, LOW);
-  for (int i = 0; i < 2; i++){
-    ledcWrite(SPEAKER_PIN, ERROR_FREQ);
-    delay(BEEP_DURATION_MS);
-    ledcWrite(SPEAKER_PIN, 0);
-    delay(PAUSE_DURATION_MS);
+  digitalWrite(LED_BUILTIN, LOW);
+  if(config.shouldPlayAlarm){
+    for (int i = 0; i < 2; i++){
+      ledcWrite(SPEAKER_PIN, ERROR_FREQ);
+      delay(ERROR_BEEP_DURATION_MS);
+      ledcWrite(SPEAKER_PIN, 0);
+      delay(ERROR_PAUSE_DURATION_MS);
+    }
+  }
+}
+
+void displayErrorCode(int errorCode){
+  if(errorCode == 0){
+    return;
+  }
+  // Blink built in led
+  unsigned long currentMillis = millis();
+  if(previousMillis > currentMillis){
+    // Rollover occured
+    previousMillis = 0;
+  }
+  // check if interval has passed
+  if (currentMillis - previousMillis >= INTERVAL) {
+    previousMillis = currentMillis;   // save last toggle time
+    isLedOn = !isLedOn;               // flip state
+    digitalWrite(LED_BUILTIN, isLedOn);    // apply to LED
+  }
+
+  // set LED BAR with error code
+  setAllLedBar(LOW);
+  if(errorCode >= LED_BAR_COUNT){
+    // Exceed error code display capabilities fallback (Maybe can be improved with binary rep.)
+    setAllLedBar(HIGH);
+  }else{
+    digitalWrite(LED_BAR_PINS[errorCode], HIGH);
   }
 }
 
@@ -58,27 +95,6 @@ void retryLed(float progress){
     
   }else{
     // Some error occurred
-
-    // Blink built in led
-    unsigned long currentMillis = millis();
-    if(previousMillis > currentMillis){
-      // Rollover occured
-      previousMillis = 0;
-    }
-    // check if interval has passed
-    if (currentMillis - previousMillis >= INTERVAL) {
-      previousMillis = currentMillis;   // save last toggle time
-      isLedOn = !isLedOn;               // flip state
-      digitalWrite(LED_BUILTIN, isLedOn);    // apply to LED
-    }
-
-    // set LED BAR with error code
-    setAllLedBar(LOW);
-    if(errorCode >= LED_BAR_COUNT){
-      // Exceed error code display capabilities fallback (Maybe can be improved with binary rep.)
-      setAllLedBar(HIGH);
-    }else{
-      digitalWrite(LED_BAR_PINS[errorCode], HIGH);
-    }
+    displayErrorCode(errorCode);
   }
 }
