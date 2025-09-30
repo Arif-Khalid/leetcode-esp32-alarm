@@ -2,16 +2,21 @@
 This project is a little alarm for that checks if you did your daily leetcode for you!
 # Requirements
 * DOIT ESP32 DEVKIT V1 (or another ESP32 board)
-* Speaker
-* LED
-* Resistors
+* Single 2 pin [Speaker/Buzzer](https://sg.element14.com/multicomp-pro/mckpt-g1720-3922/piezo-buzzer/dp/1756525)
+* Single 2 pin LED
+* 12 * 330Ω Resistors
 * A leetcode account
 * Arduino IDE
+* (Optional) [LED BAR](https://www.digikey.sg/en/products/detail/kingbright/DC10GWA/1747576)
 # Setup
 1. Hardware Setup (Change respective pin number in constants.h as required for your own pin numbers)
+  * Circuit diagram made in [circuit-diagram.org](https://www.circuit-diagram.org/), found as `circuit.cddx` in repo root, also shown as an image below
+    * *Please follow your specific ESP32 datasheet for accurate pin mappings*
   * My LED is connected to pin 23(GPIO) with a resistor to ground
   * My Buzzer is connected to pin 22(GPIO PWM Enabled) with a resistor to ground
   * (Optional)10 segment [LED BAR](https://www.digikey.sg/en/products/detail/kingbright/DC10GWA/1747576) that I have configured to show the progress till the next api check and the error code if there is one
+    * This is represented by the 10 adjacent LEDs in circuit diagram  
+![Circuit Diagram](https://github.com/user-attachments/assets/7a66c9e6-1abd-4bc1-9647-8623bcc501d7)
 2. Software Setup
   * Clone the project into a folder */alarm (necessary for arduino ide)
   * Create credentials.h and copy in the example in credentials_example.h, filling in your credentials. `unique_base_url` can be set to "https://alfa-leetcode-api.onrender.com/" to use public api. See [alfa-leetcode-api repo](https://github.com/alfaarghya/alfa-leetcode-api/)
