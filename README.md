@@ -54,6 +54,7 @@ When detected as daily completed, will stop retrying until 8.30am the following 
 *RetryFrequency refers to the frequency that the leetcode alfa-api is called to check daily completion status, each status check sounds the alarm if checked as incomplete*
 
 ## Error Codes
+*Error descriptions will be sent to serial monitor, view with baud rate 9600 on Arduino IDE Serial Monitor*
 ### Feedback
 * When an API error occurs, you will see the built-in LED of the ESP32 blinking  
 * If LED BAR is added, error code can be seen via which LED is lit up on bar (0 based indexing)
